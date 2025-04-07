@@ -1,0 +1,34 @@
+services:
+  
+  mssqldb:
+    container_name: mssqltarefas
+    restart: on-failure
+    environment:
+      - MSSQL_SA_PASSWORD=@Passw0rd
+      - ACCEPT_EULA=Y
+      - attach_dbs=[{"dbName":"gerenciadortarefasdb","dbFiles":["./shared-run/mssql/data/gerenciadortarefasdb.mdf","./shared-run/mssql/log/gerenciadortarefas_log.ldf"]}]    
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "@Passw0rd" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./shared-run/mssql/data:/var/opt/mssql/data
+      - ./shared-run/mssql/log:/var/opt/mssql/log
+      - ./shared-run/mssql/backup:/var/opt/mssql/backup
+  gerenciadortarefasapi:
+    container_name: gerenciadortarefasapi
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "ConnectionStrings:DefaultConnection=Server=localhost:1433;Initial Catalog=GerenciadorTarefas;Persist Security Info=False;User Id=sa;Password=@Passw0rd;MultipleActiveResultSets=True;TrustServerCertificate=True"
+    depends_on:
+      mssqldb: 
+        condition: service_healthy
+    ports:
+      - "5057:80"
+    volumes:
+      - "./shared-run/logs:/var/log/api"

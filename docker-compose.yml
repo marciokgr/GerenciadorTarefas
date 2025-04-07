@@ -1,0 +1,10 @@
+services:
+
+  mssqldb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  gerenciadortarefasapi:
+    image: ${DOCKER_REGISTRY-}gerenciadortarefasapi
+    build:
+      context: .
+      dockerfile: src/GerenciadorTarefas.WebAPI/Dockerfile
